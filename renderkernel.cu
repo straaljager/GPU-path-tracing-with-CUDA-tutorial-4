@@ -738,7 +738,7 @@ __device__ Vec3f renderKernel(curandState* randstate, const float4* HDRmap, cons
 		Vec3f nextdir; // ray direction of next path segment
 		Vec3f trinormal = Vec3f(0, 0, 0);
 		Refl_t refltype;
-		float ray_tmin = 0.00001f;
+		float ray_tmin = 0.00001f; // set to 0.01f when using refractive material
 		float ray_tmax = 1e20;
 
 		// intersect all triangles in the scene stored in BVH
@@ -966,6 +966,7 @@ __device__ Vec3f renderKernel(curandState* randstate, const float4* HDRmap, cons
 		} // end COAT
 
 		// perfectly refractive material (glass, water)
+		// set ray_tmin to 0.01 when using refractive material
 		if (refltype == REFR){
 
 			bool into = dot(n, nl) > 0; // is ray entering or leaving refractive material?

@@ -8,9 +8,9 @@ based on the GPU ray tracing framework of Timo Aila,
 Samuli Laine and Tero Karras (Nvidia Research)
 
 Source code for original framework: 
-https://code.google.com/archive/p/understanding-the-efficiency-of-ray-traversal-on-gpus/
-https://research.nvidia.com/publication/understanding-efficiency-ray-traversal-gpus-kepler-and-fermi-addendum
-https://mediatech.aalto.fi/~timo/HPG2009/
+- https://code.google.com/archive/p/understanding-the-efficiency-of-ray-traversal-on-gpus/
+- https://research.nvidia.com/publication/understanding-efficiency-ray-traversal-gpus-kepler-and-fermi-addendum
+- https://mediatech.aalto.fi/~timo/HPG2009/
 
 Features:
 

@@ -1,7 +1,7 @@
 #ifndef __LOADER_H_
 #define __LOADER_H_
 
-#include "geometry.h"
+#include "Geometry.h"
 
 extern unsigned verticesNo;
 extern Vertex* vertices;

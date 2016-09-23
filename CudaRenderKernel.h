@@ -29,7 +29,7 @@
 #include "linear_math.h"
 #include <cuda.h>
 #include "stdio.h"
-#include "camera.h"
+#include "Camera.h"
 
 #define scrwidth 1280
 #define scrheight 720

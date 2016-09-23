@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "geometry.h"
+#include "Geometry.h"
 #include "linear_math.h"
 
 #define M_PI 3.14156265

@@ -1,7 +1,7 @@
 // code for depth-of-field, mouse + keyboard user interaction based on https://github.com/peterkutz/GPUPathTracer
 
 #pragma once
-#include "camera.h"
+#include "Camera.h"
 
 InteractiveCamera* interactiveCamera = NULL;
 

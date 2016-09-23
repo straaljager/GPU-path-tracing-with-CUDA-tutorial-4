@@ -36,7 +36,7 @@ struct RayStats
 {
 	RayStats()          { clear(); }
 	void clear()        { memset(this, 0, sizeof(RayStats)); }																		/// platform.getName().getPtr
-	void print() const  { if (numRays>0) printf("Ray stats: (%s) %d rays, %.1f tris/ray, %.1f nodes/ray (cost=%.2f) %.2f treelets/ray\n", platform.getName(), numRays, 1.f*numTriangleTests / numRays, 1.f*numNodeTests / numRays, (platform.getSAHTriangleCost()*numTriangleTests / numRays + platform.getSAHNodeCost()*numNodeTests / numRays), 1.f*numTreelets / numRays); }
+	void print() const  { if (numRays>0) printf("Ray stats: (%s) %d rays, %.1f tris/ray, %.1f nodes/ray (cost=%.2f) %.2f treelets/ray\n", platform.getName().c_str(), numRays, 1.f*numTriangleTests / numRays, 1.f*numNodeTests / numRays, (platform.getSAHTriangleCost()*numTriangleTests / numRays + platform.getSAHNodeCost()*numNodeTests / numRays), 1.f*numTreelets / numRays); }
 
 	S32         numRays;  
 	S32         numTriangleTests;

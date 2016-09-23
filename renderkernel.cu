@@ -1118,8 +1118,8 @@ __global__ void PathTracingKernel(Vec3f* output, Vec3f* accumbuffer, const float
 		// ray origin
 		Vec3f originInWorldSpace = aperturePoint;
 
-		finalcol += renderKernel(&randState, HDRmap, gpuNodes, gpuTriWoops, gpuDebugTris, gpuTriIndices, originInWorldSpace, rayInWorldSpace, leafcount, tricount); 
-		finalcol *= (1.0f/samps);
+		finalcol += renderKernel(&randState, HDRmap, gpuNodes, gpuTriWoops, gpuDebugTris, gpuTriIndices, 
+				originInWorldSpace, rayInWorldSpace, leafcount, tricount) * (1.0f/samps);
 	}
 
 	// add pixel colour to accumulation buffer (accumulates all samples) 

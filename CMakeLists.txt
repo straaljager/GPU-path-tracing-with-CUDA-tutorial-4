@@ -21,7 +21,7 @@ set(HEADERS
     CudaBVH.h
     CudaRenderKernel.h
     Geometry.h
-    HDRLoader.h
+    HDRloader.h
     MouseKeyboardInput.h
     Scene.h
     SceneLoader.h
@@ -37,7 +37,7 @@ set(SOURCES
     BVHNode.cpp
     Camera.cpp
     CudaBVH.cpp
-    HDRLoader.cpp
+    HDRloader.cpp
     main.cpp
     renderkernel.cu
     SceneLoader.cpp

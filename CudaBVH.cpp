@@ -102,15 +102,21 @@ CudaBVH& CudaBVH::operator=(CudaBVH& other)
 	}
 	return *this;
 }
+
+namespace detail
+{
+struct StackEntry
+{
+    const BVHNode*  node;
+    S32             idx;
+
+    StackEntry(const BVHNode* n = NULL, int i = 0) : node(n), idx(i) {}
+};
+}
+
 void CudaBVH::createCompact(const BVH& bvh, int nodeOffsetSizeDiv)
 {
-	struct StackEntry
-	{
-		const BVHNode*  node;
-		S32             idx;
-
-		StackEntry(const BVHNode* n = NULL, int i = 0) : node(n), idx(i) {}
-	};
+    using namespace detail; // for StackEntry
 
 	int leafcount = 0; // counts leafnodes
 

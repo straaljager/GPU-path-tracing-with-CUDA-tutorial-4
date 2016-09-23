@@ -28,6 +28,7 @@
 #pragma once
 #include "Scene.h"
 #include "BVHNode.h"
+#include <cstdio>
 #include <string>
 
 typedef float F32;

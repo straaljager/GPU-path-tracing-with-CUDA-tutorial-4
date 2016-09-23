@@ -26,6 +26,7 @@
 */
 
 #pragma once
+#include <cmath>
 #include "linear_math.h"
 #include <string.h>
 #include "Util.h"
@@ -161,7 +162,7 @@ template <class T> void Array<T>::removeSwap(int start, int end)
 	int oldSize = m_size;
 	m_size += start - end;
 
-	int copyStart = max(m_size, end);
+	int copyStart = std::max(m_size, end);
 	copy(m_ptr + start, m_ptr + copyStart, oldSize - copyStart);
 }
 

@@ -38,11 +38,10 @@ Instructions for compiling with Visual Studio 2013/2015:
 - open VS2013/2015 (Express or any other version such as the free Community version)
 - click New Project...
 - select Visual C++, then General, then Empty Project
-- right click on the project, select Build Dependies > Build Customizations
-- select the CUDA 7.5 checkbox, click OK
+- right click on the project, select Build Dependies > Build Customizations, check CUDA 7.5, click OK
 - add all the files to the project
-- in the project explorer window, right click on render_kernel.cu file, select Properties, change the Item type to CUDA C/C++
-- right click on the project name, select Properties
+- in the solution explorer, right click on "render_kernel.cu", select Properties, change the Item type to CUDA C/C++
+- right click on the project name and select Properties
 - under Linker > Input > Additional Dependencies, add "cudart.lib" and "glew32.lib" (glew32.lib should be automatically found when the CUDA toolkit is installed) 
 - when the compiler can't find glew32.lib, add the library path to Linker > General > Additional Library Directories, the path is something like "%NVSDKCOMPUTE_ROOT%\C\common\lib")
 - disable SAFESEH by selecting NO in Linker > Advanced > Image Has Safe Exception Handlers

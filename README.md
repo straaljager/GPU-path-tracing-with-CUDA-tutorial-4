@@ -3,11 +3,11 @@ Matching Socks CUDA path tracer
 by Samuel Lapere, 2016
 https://raytracey.blogspot.com
 
-Screenshots and more info about this tutorial can be found at http://raytracey.blogspot.co.nz/2016/09/gpu-path-tracing-tutorial-4-optimised.html
-
 Demo of high performance CUDA accelerated path tracing
 based on the GPU ray tracing framework of Timo Aila, 
 Samuli Laine and Tero Karras (Nvidia Research)
+
+Screenshots and more info about this tutorial can be found at http://raytracey.blogspot.co.nz/2016/09/gpu-path-tracing-tutorial-4-optimised.html
 
 Downloadable demo available at 
 https://github.com/straaljager/GPU-path-tracing-tutorial-4/releases

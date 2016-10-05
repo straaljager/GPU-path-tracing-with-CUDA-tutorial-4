@@ -9,6 +9,9 @@ Demo of high performance CUDA accelerated path tracing
 based on the GPU ray tracing framework of Timo Aila, 
 Samuli Laine and Tero Karras (Nvidia Research)
 
+Downloadable demo available at 
+https://github.com/straaljager/GPU-path-tracing-tutorial-4/releases
+
 Source code for original framework: 
 - https://code.google.com/archive/p/understanding-the-efficiency-of-ray-traversal-on-gpus/
 - https://research.nvidia.com/publication/understanding-efficiency-ray-traversal-gpus-kepler-and-fermi-addendum
@@ -28,11 +31,6 @@ Features:
 - basic OBJ loader
 - basic material system with support for diffuse, clearcoat, refractive (glass), specular(mirror) and metal material
 - support for spheres and triangle meshes
-
-
-Downloadable demo available at 
-https://github.com/straaljager/GPU-path-tracing-tutorial-4/releases
-
 
 Instructions for compiling with Visual Studio 2013/2015:
 

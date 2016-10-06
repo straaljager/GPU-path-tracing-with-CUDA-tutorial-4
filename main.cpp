@@ -81,7 +81,7 @@ bool nocachedBVH = false;
 
 void Timer(int obsolete) {
 	glutPostRedisplay();
-	glutTimerFunc(30, Timer, 0);
+	glutTimerFunc(10, Timer, 0);
 }
 
 void createVBO(GLuint* vbo)

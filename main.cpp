@@ -197,8 +197,12 @@ void initHDR(){
 
 	if (HDRLoader::load(HDRfile, HDRresult)) 
 		printf("HDR environment map loaded. Width: %d Height: %d\n", HDRresult.width, HDRresult.height);
-	else printf("HDR environment map not found\n");
-
+	else{ 
+		printf("HDR environment map not found\nAn HDR map is required as light source. Exiting now...\n"); 
+		system("PAUSE");
+		exit(0);
+	}
+	
 	int HDRwidth = HDRresult.width;
 	int HDRheight = HDRresult.height;
 	cpuHDRenv = new Vec4f[HDRwidth * HDRheight];

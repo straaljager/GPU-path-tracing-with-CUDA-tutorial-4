@@ -27,7 +27,7 @@
 
 //const char* scenefile = "data/icosahedron.obj";
 //const char* scenefile = "data/dragon_vrip_res3.ply";  
-const char* scenefile = "data/dragon_vrip.ply"; 
+const char* scenefile = "data/dragon.obj"; 
 //const char* scenefile = "data/happy_vrip_res2.ply";  
 //const char* scenefile = "data/happy_vrip.ply"; 
 //const char* scenefile = "data/bun_zipper.ply";  

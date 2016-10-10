@@ -46,10 +46,11 @@ Instructions for compiling with Visual Studio 2013/2015:
 - when the compiler can't find glew32.lib, add the library path to Linker > General > Additional Library Directories, the path is something like "%NVSDKCOMPUTE_ROOT%\C\common\lib")
 - disable SAFESEH by selecting NO in Linker > Advanced > Image Has Safe Exception Handlers
 - select Build > Rebuild Solution and run the program 
+- IMPORTANT: build the code in Release mode (building in Debug mode will result in extremely slow render performance, in some cases more than 100x slower due to hundreds of CUDA processors logging state with extra debug information)
 
 Issues:
 
 - the OBJ loader is quite basic at the moment and only loads obj models that are in a particular format, hence some but not all OBJ files will work
-- at the moment there is no CUDA error checking when copying data to the GPU, if model or HDR map data is missing, not found or not in the right format, the program will exit or display a black screen
+- at the moment there is no CUDA error checking when copying data to the GPU. When CUDA tries to access data on the GPU that is missing/has not been copied to the GPU, the program may render a black screen instead.
 
 

@@ -266,12 +266,10 @@ void CudaBVH::woopifyTri(const BVH& bvh, int triIdx)
 
 	// fetch the 3 vertex indices of this triangle
 	const Vec3i& vtxInds = bvh.getScene()->getTriangle(bvh.getTriIndices()[triIdx]).vertices; 
-	const Vec3f& v0 = Vec3f(vertices[vtxInds._v[0]].x, vertices[vtxInds._v[0]].y, vertices[vtxInds._v[0]].z); // vtx xyz pos voor eerste triangle vtx
-	//const Vec3f& v1 = bvh.getScene()->getVertex(vtxInds.y);
-	const Vec3f& v1 = Vec3f(vertices[vtxInds._v[1]].x, vertices[vtxInds._v[1]].y, vertices[vtxInds._v[1]].z); // vtx xyz pos voor tweede triangle vtx
-	//const Vec3f& v2 = bvh.getScene()->getVertex(vtxInds.z);
-	const Vec3f& v2 = Vec3f(vertices[vtxInds._v[2]].x, vertices[vtxInds._v[2]].y, vertices[vtxInds._v[2]].z); // vtx xyz pos voor derde triangle vtx
-
+  const Vec3f& v0 = bvh.getScene()->getVertex(vtxInds.x);
+  const Vec3f& v1 = bvh.getScene()->getVertex(vtxInds.y);
+	const Vec3f& v2 = bvh.getScene()->getVertex(vtxInds.z);
+	
 	// regular triangles (for debugging only)
 	m_debugtri[0] = Vec4f(v0.x, v0.y, v0.z, 0.0f);
 	m_debugtri[1] = Vec4f(v1.x, v1.y, v1.z, 0.0f);

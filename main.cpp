@@ -74,7 +74,7 @@ int triangle_count = 0;
 int triWoopSize = 0;
 int triDebugSize = 0;
 int triIndicesSize = 0;
-float scalefactor = 1.2f;
+float scalefactor = .2f;
 __device__ float timer = 0.0f;
 bool nocachedBVH = false;
 
@@ -128,8 +128,9 @@ void disp(void)
 	
 	cudaThreadSynchronize();
 	cudaGLUnmapBufferObject(vbo);
-	//glFlush();
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glFlush();
+  glFinish();
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexPointer(2, GL_FLOAT, 12, 0);
 	glColorPointer(4, GL_UNSIGNED_BYTE, 12, (GLvoid*)8);
 
@@ -285,10 +286,8 @@ void createBVH(){
 
 	std::cout << "Building CudaBVH\n";
 	// create CUDA friendly BVH datastructure
-	gpuBVH = new CudaBVH(myBVH, BVHLayout_Compact);  // Fermi BVH layout = compact. BVH layout for Kepler kernel Compact2
+	gpuBVH = new CudaBVH(myBVH, BVHLayout_Compact2);  // BVH layout for Kepler kernel Compact2
 	std::cout << "CudaBVH successfully created\n";
-
-	std::cout << "Hi Sam!  How you doin'?" << std::endl;
 
 	cpuNodePtr = gpuBVH->getGpuNodes();
 	cpuTriWoopPtr = gpuBVH->getGpuTriWoop();
@@ -367,6 +366,9 @@ int main(int argc, char** argv){
 	glutInitWindowPosition(100, 100); // specify the initial window position
 	glutInitWindowSize(scrwidth, scrheight); // specify the initial window size
 	glutCreateWindow("MatchingSocks, CUDA path tracer using SplitBVH"); // create the window and set title
+
+  cudaGLSetGLDevice(0);
+  cudaSetDevice(0);
 
 	// initialise OpenGL:
 	glClearColor(0.0, 0.0, 0.0, 0.0);

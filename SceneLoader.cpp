@@ -154,10 +154,6 @@ void load_object(const char *filename)
 							Vertex *vertexA = &vertices[idx1];
 							Vertex *vertexB = &vertices[idx2];
 							Vertex *vertexC = &vertices[idx3];
-							pCurrentTriangle->_center = Vec3f(
-								(vertexA->x + vertexB->x + vertexC->x) / 3.0f,
-								(vertexA->y + vertexB->y + vertexC->y) / 3.0f,
-								(vertexA->z + vertexB->z + vertexC->z) / 3.0f);
 							pCurrentTriangle++;
 						}
 					}
@@ -573,12 +569,6 @@ void load_object(const char *filename)
 				Vertex *vertexB = &vertices[currentfaceinds.y - 1];
 				Vertex *vertexC = &vertices[currentfaceinds.z - 1];
 
-
-				pCurrentTriangle->_center = Vec3f(
-					(vertexA->x + vertexB->x + vertexC->x) / 3.0f,
-					(vertexA->y + vertexB->y + vertexC->y) / 3.0f,
-					(vertexA->z + vertexB->z + vertexC->z) / 3.0f);
-
 				pCurrentTriangle++;
 			}
 		}
@@ -645,7 +635,7 @@ float processgeo(){
 		vertices[i] -= origCenter;
 		//vertices[i].y += origCenter.y;
 		//vertices[i] *= (MaxCoordAfterRescale / maxi);
-		vertices[i] *= 20; // 0.25
+		vertices[i] *= 0.1; // 0.25
 	}
 
 	return MaxCoordAfterRescale;

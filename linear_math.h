@@ -269,19 +269,6 @@ inline int popc32(U32 mask)
 	return result;
 }
 
-typedef unsigned long U64;
-
-inline int popc64(U64 mask)
-{
-	U32 lo = (U32)mask;
-	U32 hi = (U32)(mask >> 32);
-	int result = c_popc8LUT[lo & 0xffu] + c_popc8LUT[hi & 0xffu];
-	result += c_popc8LUT[(lo >> 8) & 0xffu] + c_popc8LUT[(hi >> 8) & 0xffu];
-	result += c_popc8LUT[(lo >> 16) & 0xffu] + c_popc8LUT[(hi >> 16) & 0xffu];
-	result += c_popc8LUT[lo >> 24] + c_popc8LUT[hi >> 24];
-	return result;
-}
-
 //------------------------------------------------------------------------
 
 Vec4f Mat4f::getRow(int idx) const

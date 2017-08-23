@@ -36,12 +36,9 @@ public:
 	struct Triangle
 	{
 		Vec3i       vertices;   //3 vertex indices of triangle
-		Vec3f       normal;
-		Triangle() : vertices(Vec3i(0, 0, 0)), normal(Vec3f(0, 0, 0)) {}
+    Triangle() : vertices(Vec3i(0, 0, 0)) {};
 	};
 
-
-#if !FW_CUDA
 public:
 		
 	Scene(const S32 numTris, const S32 numVerts, const Array<Triangle>& tris, const Array<Vec3f>& verts) : 
@@ -66,7 +63,5 @@ private:
 	S32             m_numVerts;
 	Array<Triangle>      m_tris;     
 	Array<Vec3f>         m_verts; 
-
-#endif
 };
 

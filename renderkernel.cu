@@ -413,7 +413,6 @@ __device__ void DEBUGintersectBVHandTriangles(const float4 rayorig, const float4
 
 
 __device__ void intersectBVHandTriangles(const float4 rayorig, const float4 raydir,
-	const float4* gpuNodes, const float4* gpuTriWoops, const float4* gpuDebugTris, const int* gpuTriIndices, 
 	int& hitTriIdx, float& hitdistance, int& debugbingo, Vec3f& trinormal, int leafcount, int tricount, bool anyHit)
 {
 	// assign a CUDA thread to every pixel by using the threadIndex
@@ -421,14 +420,10 @@ __device__ void intersectBVHandTriangles(const float4 rayorig, const float4 rayd
 	int thread_index = (blockIdx.x + blockIdx.y * gridDim.x) * (blockDim.x * blockDim.y) + (threadIdx.y * blockDim.x) + threadIdx.x;
 
 	///////////////////////////////////////////
-	//// FERMI / KEPLER KERNEL
+	//// KEPLER KERNEL
 	///////////////////////////////////////////
 
-	// BVH layout Compact2 for Kepler, Ccompact for Fermi (nodeOffsetSizeDiv is different)
-	// void CudaBVH::createCompact(const BVH& bvh, int nodeOffsetSizeDiv)
-	// createCompact(bvh,16); for Compact2
-	// createCompact(bvh,1); for Compact
-
+	// BVH layout Compact2 for Kepler
 	int traversalStack[STACK_SIZE];
 
 	// Live state during traversal, stored in registers.
@@ -445,10 +440,7 @@ __device__ void intersectBVHandTriangles(const float4 rayorig, const float4 rayd
 	int     nodeAddr;
 	int     hitIndex;               // Triangle index of the closest intersection, -1 if none.
 	float   hitT;                   // t-value of the closest intersection.
-	// Kepler kernel only
-	//int     leafAddr2;              // Second postponed leaf, non-negative if none.  
-	//int     nodeAddr = EntrypointSentinel; // Non-negative: current internal node, negative: second postponed leaf.
-
+	
 	int threadId1; // ipv rayidx
 
 	// Initialize (stores local variables in registers)
@@ -505,12 +497,12 @@ __device__ void intersectBVHandTriangles(const float4 rayorig, const float4 rayd
 
 			// nodeAddr is an offset in number of bytes (char) in gpuNodes array
 			
-			float4* ptr = (float4*)((char*)gpuNodes + nodeAddr);							
-			float4 n0xy = ptr[0]; // childnode 0, xy-bounds (c0.lo.x, c0.hi.x, c0.lo.y, c0.hi.y)		
-			float4 n1xy = ptr[1]; // childnode 1, xy-bounds (c1.lo.x, c1.hi.x, c1.lo.y, c1.hi.y)		
-			float4 nz = ptr[2]; // childnode 0 and 1, z-bounds (c0.lo.z, c0.hi.z, c1.lo.z, c1.hi.z)		
-			// ptr[3] contains indices to 2 childnodes in case of innernode, see below
-			// (childindex = size of array during building, see CudaBVH.cpp)
+			float4 n0xy = tex1Dfetch(bvhNodesTexture, nodeAddr); // childnode 0, xy-bounds (c0.lo.x, c0.hi.x, c0.lo.y, c0.hi.y)		
+			float4 n1xy = tex1Dfetch(bvhNodesTexture, nodeAddr + 1); // childnode 1, xy-bounds (c1.lo.x, c1.hi.x, c1.lo.y, c1.hi.y)		
+			float4 nz = tex1Dfetch(bvhNodesTexture, nodeAddr + 2); // childnode 0 and 1, z-bounds (c0.lo.z, c0.hi.z, c1.lo.z, c1.hi.z)		
+            float4 tmp = tex1Dfetch(bvhNodesTexture, nodeAddr + 3); // contains indices to 2 childnodes in case of innernode, see below
+            int2 cnodes = *(int2*)&tmp; // cast first two floats to int
+            // (childindex = size of array during building, see CudaBVH.cpp)
 
 			// compute ray intersections with BVH node bounding box
 
@@ -552,7 +544,6 @@ __device__ void intersectBVHandTriangles(const float4 rayorig, const float4 rayd
 
 			else  
 			{
-				int2 cnodes = *(int2*)&ptr[3];
 				// set nodeAddr equal to intersected childnode index (or first childnode when both children are intersected)
 				nodeAddr = (traverseChild0) ? cnodes.x : cnodes.y; 
 
@@ -746,7 +737,7 @@ __device__ Vec3f renderKernel(curandState* randstate, const float4* HDRmap, cons
 		int debugbingo = 0;
 
 		intersectBVHandTriangles(make_float4(rayorig.x, rayorig.y, rayorig.z, ray_tmin), make_float4(raydir.x, raydir.y, raydir.z, ray_tmax),
-			gpuNodes, gpuTriWoops, gpuDebugTris, gpuTriIndices, bestTriIdx, hitDistance, debugbingo, trinormal, leafcount, tricount, false);
+			bestTriIdx, hitDistance, debugbingo, trinormal, leafcount, tricount, false);
 
 		//DEBUGintersectBVHandTriangles(make_float4(rayorig.x, rayorig.y, rayorig.z, ray_tmin), make_float4(raydir.x, raydir.y, raydir.z, ray_tmax),
 		//gpuNodes, gpuTriWoops, gpuDebugTris, gpuTriIndices, bestTriIdx, hitDistance, debugbingo, trinormal, leafcount, tricount, false);
@@ -1027,117 +1018,117 @@ __device__ Vec3f renderKernel(curandState* randstate, const float4* HDRmap, cons
 	return accucolor;
 }
 
-__global__ void PathTracingKernel(Vec3f* output, Vec3f* accumbuffer, const float4* HDRmap, const float4* gpuNodes, const float4* gpuTriWoops, 
-	const float4* gpuDebugTris, const int* gpuTriIndices, unsigned int framenumber, unsigned int hashedframenumber, unsigned int leafcount, 
-	unsigned int tricount, const Camera* cudaRendercam) 
+__global__ void PathTracingKernel(Vec3f* output, Vec3f* accumbuffer, const float4* HDRmap, const float4* gpuNodes, const float4* gpuTriWoops,
+  const float4* gpuDebugTris, const int* gpuTriIndices, unsigned int framenumber, unsigned int hashedframenumber, unsigned int leafcount,
+  unsigned int tricount, const Camera* cudaRendercam)
 {
-	// assign a CUDA thread to every pixel by using the threadIndex
-	unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
-	unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
+  // assign a CUDA thread to every pixel by using the threadIndex
+  unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
+  unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
 
-	// global threadId, see richiesams blogspot
-	int threadId = (blockIdx.x + blockIdx.y * gridDim.x) * (blockDim.x * blockDim.y) + (threadIdx.y * blockDim.x) + threadIdx.x;
-	//int pixelx = threadId % scrwidth; // pixel x-coordinate on screen
-	//int pixely = threadId / scrwidth; // pixel y-coordintate on screen
+  // global threadId, see richiesams blogspot
+  int threadId = (blockIdx.x + blockIdx.y * gridDim.x) * (blockDim.x * blockDim.y) + (threadIdx.y * blockDim.x) + threadIdx.x;
+  //int pixelx = threadId % scrwidth; // pixel x-coordinate on screen
+  //int pixely = threadId / scrwidth; // pixel y-coordintate on screen
 
-	// create random number generator and initialise with hashed frame number, see RichieSams blogspot
-	curandState randState; // state of the random number generator, to prevent repetition
-	curand_init(hashedframenumber + threadId, 0, 0, &randState);
+  // create random number generator and initialise with hashed frame number, see RichieSams blogspot
+  curandState randState; // state of the random number generator, to prevent repetition
+  curand_init(hashedframenumber + threadId, 0, 0, &randState);
 
-	Vec3f finalcol; // final pixel colour 
-	finalcol = Vec3f(0.0f, 0.0f, 0.0f); // reset colour to zero for every pixel	
-	//Vec3f rendercampos = Vec3f(0, 0.2, 4.6f); 
-	Vec3f rendercampos = Vec3f(cudaRendercam->position.x, cudaRendercam->position.y, cudaRendercam->position.z);
+  Vec3f finalcol; // final pixel colour 
+  finalcol = Vec3f(0.0f, 0.0f, 0.0f); // reset colour to zero for every pixel	
+  //Vec3f rendercampos = Vec3f(0, 0.2, 4.6f); 
+  Vec3f rendercampos = Vec3f(cudaRendercam->position.x, cudaRendercam->position.y, cudaRendercam->position.z);
 
-	int i = (scrheight - y - 1) * scrwidth + x; // pixel index in buffer	
-	int pixelx = x; // pixel x-coordinate on screen
-	int pixely = scrheight - y - 1; // pixel y-coordintate on screen
+  int i = (scrheight - y - 1) * scrwidth + x; // pixel index in buffer	
+  int pixelx = x; // pixel x-coordinate on screen
+  int pixely = scrheight - y - 1; // pixel y-coordintate on screen
 
-	Vec3f camdir = Vec3f(0, -0.042612, -1); camdir.normalize();
-	Vec3f cx = Vec3f(scrwidth * .5135f / scrheight, 0.0f, 0.0f);  // ray direction offset along X-axis 
-	Vec3f cy = (cross(cx, camdir)).normalize() * .5135f; // ray dir offset along Y-axis, .5135 is FOV angle
+  Vec3f camdir = Vec3f(0, -0.042612, -1); camdir.normalize();
+  Vec3f cx = Vec3f(scrwidth * .5135f / scrheight, 0.0f, 0.0f);  // ray direction offset along X-axis 
+  Vec3f cy = (cross(cx, camdir)).normalize() * .5135f; // ray dir offset along Y-axis, .5135 is FOV angle
 
 
-	for (int s = 0; s < samps; s++){
+  for (int s = 0; s < samps; s++) {
 
-		// compute primary ray direction
-		// use camera view of current frame (transformed on CPU side) to create local orthonormal basis
-		Vec3f rendercamview = Vec3f(cudaRendercam->view.x, cudaRendercam->view.y, cudaRendercam->view.z); rendercamview.normalize(); // view is already supposed to be normalized, but normalize it explicitly just in case.
-		Vec3f rendercamup = Vec3f(cudaRendercam->up.x, cudaRendercam->up.y, cudaRendercam->up.z); rendercamup.normalize();
-		Vec3f horizontalAxis = cross(rendercamview, rendercamup); horizontalAxis.normalize(); // Important to normalize!
-		Vec3f verticalAxis = cross(horizontalAxis, rendercamview); verticalAxis.normalize(); // verticalAxis is normalized by default, but normalize it explicitly just for good measure.
+    // compute primary ray direction
+    // use camera view of current frame (transformed on CPU side) to create local orthonormal basis
+    Vec3f rendercamview = Vec3f(cudaRendercam->view.x, cudaRendercam->view.y, cudaRendercam->view.z); rendercamview.normalize(); // view is already supposed to be normalized, but normalize it explicitly just in case.
+    Vec3f rendercamup = Vec3f(cudaRendercam->up.x, cudaRendercam->up.y, cudaRendercam->up.z); rendercamup.normalize();
+    Vec3f horizontalAxis = cross(rendercamview, rendercamup); horizontalAxis.normalize(); // Important to normalize!
+    Vec3f verticalAxis = cross(horizontalAxis, rendercamview); verticalAxis.normalize(); // verticalAxis is normalized by default, but normalize it explicitly just for good measure.
 
-		Vec3f middle = rendercampos + rendercamview; 
-		Vec3f horizontal = horizontalAxis * tanf(cudaRendercam->fov.x * 0.5 * (M_PI / 180)); // Treating FOV as the full FOV, not half, so multiplied by 0.5
-		Vec3f vertical = verticalAxis * tanf(-cudaRendercam->fov.y * 0.5 * (M_PI / 180)); // Treating FOV as the full FOV, not half, so multiplied by 0.5
+    Vec3f middle = rendercampos + rendercamview;
+    Vec3f horizontal = horizontalAxis * tanf(cudaRendercam->fov.x * 0.5 * (M_PI / 180)); // Treating FOV as the full FOV, not half, so multiplied by 0.5
+    Vec3f vertical = verticalAxis * tanf(-cudaRendercam->fov.y * 0.5 * (M_PI / 180)); // Treating FOV as the full FOV, not half, so multiplied by 0.5
 
-		// anti-aliasing
-		// calculate center of current pixel and add random number in X and Y dimension
-		// based on https://github.com/peterkutz/GPUPathTracer 
-		
-		 float jitterValueX = curand_uniform(&randState) - 0.5;
-		 float jitterValueY = curand_uniform(&randState) - 0.5;
-		 float sx = (jitterValueX + pixelx) / (cudaRendercam->resolution.x - 1);
-		 float sy = (jitterValueY + pixely) / (cudaRendercam->resolution.y - 1);
+    // anti-aliasing
+    // calculate center of current pixel and add random number in X and Y dimension
+    // based on https://github.com/peterkutz/GPUPathTracer 
 
-		// compute pixel on screen
-		Vec3f pointOnPlaneOneUnitAwayFromEye = middle + (horizontal * ((2 * sx) - 1)) + (vertical * ((2 * sy) - 1));
-		Vec3f pointOnImagePlane = rendercampos + ((pointOnPlaneOneUnitAwayFromEye - rendercampos) * cudaRendercam->focalDistance); // Important for depth of field!		
-																											
-		// calculation of depth of field / camera aperture 
-		// based on https://github.com/peterkutz/GPUPathTracer 
+    float jitterValueX = curand_uniform(&randState) - 0.5;
+    float jitterValueY = curand_uniform(&randState) - 0.5;
+    float sx = (jitterValueX + pixelx) / (cudaRendercam->resolution.x - 1);
+    float sy = (jitterValueY + pixely) / (cudaRendercam->resolution.y - 1);
 
-		Vec3f aperturePoint = Vec3f(0, 0, 0);
+    // compute pixel on screen
+    Vec3f pointOnPlaneOneUnitAwayFromEye = middle + (horizontal * ((2 * sx) - 1)) + (vertical * ((2 * sy) - 1));
+    Vec3f pointOnImagePlane = rendercampos + ((pointOnPlaneOneUnitAwayFromEye - rendercampos) * cudaRendercam->focalDistance); // Important for depth of field!		
 
-		if (cudaRendercam->apertureRadius > 0.00001) { // the small number is an epsilon value.
+    // calculation of depth of field / camera aperture 
+    // based on https://github.com/peterkutz/GPUPathTracer 
 
-			// generate random numbers for sampling a point on the aperture
-			float random1 = curand_uniform(&randState);
-			float random2 = curand_uniform(&randState);
+    Vec3f aperturePoint = Vec3f(0, 0, 0);
 
-			// randomly pick a point on the circular aperture
-			float angle = TWO_PI * random1;
-			float distance = cudaRendercam->apertureRadius * sqrtf(random2);
-			float apertureX = cos(angle) * distance;
-			float apertureY = sin(angle) * distance;
+    if (cudaRendercam->apertureRadius > 0.00001) { // the small number is an epsilon value.
 
-			aperturePoint = rendercampos + (horizontalAxis * apertureX) + (verticalAxis * apertureY);
+      // generate random numbers for sampling a point on the aperture
+      float random1 = curand_uniform(&randState);
+      float random2 = curand_uniform(&randState);
+
+      // randomly pick a point on the circular aperture
+      float angle = TWO_PI * random1;
+      float distance = cudaRendercam->apertureRadius * sqrtf(random2);
+      float apertureX = cos(angle) * distance;
+      float apertureY = sin(angle) * distance;
+
+      aperturePoint = rendercampos + (horizontalAxis * apertureX) + (verticalAxis * apertureY);
 		}
 		else { // zero aperture
-			aperturePoint = rendercampos;
-		}
+      aperturePoint = rendercampos;
+    }
 
-		// calculate ray direction of next ray in path
-		Vec3f apertureToImagePlane = pointOnImagePlane - aperturePoint;
-		apertureToImagePlane.normalize(); // ray direction needs to be normalised
-		
-		// ray direction
-		Vec3f rayInWorldSpace = apertureToImagePlane;
-		rayInWorldSpace.normalize(); 
+    // calculate ray direction of next ray in path
+    Vec3f apertureToImagePlane = pointOnImagePlane - aperturePoint;
+    apertureToImagePlane.normalize(); // ray direction needs to be normalised
 
-		// ray origin
-		Vec3f originInWorldSpace = aperturePoint;
+    // ray direction
+    Vec3f rayInWorldSpace = apertureToImagePlane;
+    rayInWorldSpace.normalize();
 
-		finalcol += renderKernel(&randState, HDRmap, gpuNodes, gpuTriWoops, gpuDebugTris, gpuTriIndices, 
-				originInWorldSpace, rayInWorldSpace, leafcount, tricount) * (1.0f/samps);
-	}
+    // ray origin
+    Vec3f originInWorldSpace = aperturePoint;
 
-	// add pixel colour to accumulation buffer (accumulates all samples) 
-	accumbuffer[i] += finalcol;
-	
-	// averaged colour: divide colour by the number of calculated frames so far
-	Vec3f tempcol = accumbuffer[i] / framenumber;
+    finalcol += renderKernel(&randState, HDRmap, gpuNodes, gpuTriWoops, gpuDebugTris, gpuTriIndices,
+        originInWorldSpace, rayInWorldSpace, leafcount, tricount) * (1.0f / samps);
+  }
 
-	Colour fcolour;
-	Vec3f colour = Vec3f(clamp(tempcol.x, 0.0f, 1.0f), clamp(tempcol.y, 0.0f, 1.0f), clamp(tempcol.z, 0.0f, 1.0f));
-	
-	// convert from 96-bit to 24-bit colour + perform gamma correction
-	fcolour.components = make_uchar4((unsigned char)(powf(colour.x, 1 / 2.2f) * 255), 
-										(unsigned char)(powf(colour.y, 1 / 2.2f) * 255), 
-										(unsigned char)(powf(colour.z, 1 / 2.2f) * 255), 1);
-	
-	// store pixel coordinates and pixelcolour in OpenGL readable outputbuffer
-	output[i] = Vec3f(x, y, fcolour.c);
+  // add pixel colour to accumulation buffer (accumulates all samples) 
+  accumbuffer[i] += finalcol;
+
+  // averaged colour: divide colour by the number of calculated frames so far
+  Vec3f tempcol = accumbuffer[i] / framenumber;
+
+  Colour fcolour;
+  Vec3f colour = Vec3f(clamp(tempcol.x, 0.0f, 1.0f), clamp(tempcol.y, 0.0f, 1.0f), clamp(tempcol.z, 0.0f, 1.0f));
+
+  // convert from 96-bit to 24-bit colour + perform gamma correction
+  fcolour.components = make_uchar4((unsigned char)(powf(colour.x, 1 / 2.2f) * 255),
+    (unsigned char)(powf(colour.y, 1 / 2.2f) * 255),
+    (unsigned char)(powf(colour.z, 1 / 2.2f) * 255), 1);
+
+  // store pixel coordinates and pixelcolour in OpenGL readable outputbuffer
+  output[i] = Vec3f(x, y, fcolour.c);
 }
 
 bool firstTime = true;
@@ -1159,7 +1150,7 @@ void cudaRender(const float4* nodes, const float4* triWoops, const float4* debug
 		cudaBindTexture(NULL, &triWoopTexture, triWoops, &channel1desc, (tricnt * 3 + leafnodecnt) * sizeof(float4));
 
 		cudaChannelFormatDesc channel3desc = cudaCreateChannelDesc<float4>();
-		cudaBindTexture(NULL, &bvhNodesTexture, nodes, &channel3desc, nodeSize * 5 * sizeof(float4));  /// 5 is niet goed
+		cudaBindTexture(NULL, &bvhNodesTexture, nodes, &channel3desc, nodeSize * sizeof(float4)); 
 
 		HDRtexture.filterMode = cudaFilterModeLinear;
 

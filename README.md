@@ -7,9 +7,12 @@ Demo of high performance CUDA accelerated path tracing
 based on the GPU ray tracing framework of Timo Aila, 
 Samuli Laine and Tero Karras (Nvidia Research)
 
-Screenshots and more info about this tutorial can be found at http://raytracey.blogspot.co.nz/2016/09/gpu-path-tracing-tutorial-4-optimised.html
+Screenshots and more info about this tutorial can be found at
+
+http://raytracey.blogspot.co.nz/2016/09/gpu-path-tracing-tutorial-4-optimised.html
 
 Downloadable demo available at 
+
 https://github.com/straaljager/GPU-path-tracing-tutorial-4/releases
 
 Source code for original framework: 
@@ -53,4 +56,12 @@ Issues:
 - the OBJ loader is quite basic at the moment and only loads obj models that are in a particular format, hence some but not all OBJ files will work
 - at the moment there is no CUDA error checking when copying data to the GPU. When CUDA tries to access data on the GPU that is missing/has not been copied to the GPU, the program may render a black screen instead.
 
+Screenshots produced with this code
 
+![Image description](https://github.com/straaljager/GPU-path-tracing-tutorial-4/blob/master/dragonhdr3.png)
+
+![Image description](https://github.com/straaljager/GPU-path-tracing-tutorial-4/blob/master/dragonhdricoat.png)
+
+![Image description](https://github.com/straaljager/GPU-path-tracing-tutorial-4/blob/master/dragonglass.png)
+
+![Image description](https://github.com/straaljager/GPU-path-tracing-tutorial-4/blob/master/romancity2.png)
